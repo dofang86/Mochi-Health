@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mood Record</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Record Your Mood Today!</h1>
+        
+        <form action="/log" method="post">
+            <div class="moods">
+                <button type="button" class="mood" data-value="😊">😊</button>
+                <button type="button" class="mood" data-value="😠">😠</button>
+                <button type="button" class="mood" data-value="😕">😕</button>
+                <button type="button" class="mood" data-value="❤️">❤️</button>
+            </div>
+            <input type="hidden" name="mood" id="selectedMood" required>
+            <textarea name="note" placeholder="Note..."></textarea>
+            <button type="submit">Submit</button>
+        </form>
+
+        <div class="message"></div>
+        <div class="chart-container">
+            <h2>Today's Mood Distribution</h2>
+            <div class="bar-chart" id="chart"></div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.mood').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mood').forEach(b => b.classList.remove('selected'))
+                btn.classList.add('selected')
+                document.getElementById('selectedMood').value = btn.dataset.value
+            })
+        })
+        
+        async function loadChart() {
+            try {
+                const response = await fetch('/today_moods')
+                const data = await response.json()
+                
+                const chart = document.getElementById('chart')
+                chart.innerHTML = '' 
+                
+                const maxCount = Math.max(...Object.values(data)) || 1
+                
+                Object.entries(data).forEach(([mood, count]) => {
+                    const bar = document.createElement('div')
+                    bar.className = 'bar'
+                    bar.style.height = `${(count / maxCount) * 100}%`
+                    
+                    const countLabel = document.createElement('div');
+                    countLabel.className = 'count-label';
+                    countLabel.textContent = count;
+
+                    const label = document.createElement('div')
+                    label.className = 'bar-label'
+                    label.textContent = `${mood}`
+
+                    bar.appendChild(countLabel);
+                    bar.appendChild(label)
+                    chart.appendChild(bar)
+                })
+            } catch (error) {
+                console.error('Fail to load chart:', error)
+            }
+        }
+
+        loadChart()
+
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const formData = new FormData(e.target)
+            
+            try {
+                const response = await fetch('/log', {
+                    method: 'POST',
+                    body: formData
+                })
+                
+                const result = await response.text()
+                document.querySelector('.message').textContent = result
+                e.target.reset()
+                setTimeout(() => {
+                    document.querySelector('.message').textContent = ''
+                    loadChart() 
+                }, 1500)
+            } catch (error) {
+                document.querySelector('.message').textContent = 'Submission Failed'
+            }
+        })
+    </script>
+</body>
+</html>
+
+
