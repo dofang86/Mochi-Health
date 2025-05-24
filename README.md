@@ -37,7 +37,13 @@ Select one emoji, add notes (optional) and click 'submit'
 The bar chart at the bottom of the page will automatically update based on the latest data after each refresh or submission
 ### 5. Chart local backup (matplotlib)
 After each refresh or logging , the latest bar chart will be stored in the local /mood_history folder
-
+```
+Mochi-Health repo/ 
+    ├── app.py  
+    └── mood_history
+        └── mood_chart.png
+    └── ...
+```
 ## Tools
 **1. Language**: Python
 
